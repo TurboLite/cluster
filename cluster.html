@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+<style>
+* {margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif;}
+body, html {width:100%; height:100%; overflow:hidden; background:#000;}
+
+#iframe-wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+iframe {
+    width:100%;
+    height:100%;
+    border:none;
+    z-index:1;
+    position:relative;
+}
+
+/* Overlay popup + background trắng */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    .loading-box {
+        background: rgba(50, 50, 50, 0.7);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* ❗ KHÔNG fade – ẩn hoàn toàn bằng display:none */
+.loading-hidden {
+    display: none !important;
+}
+
+    /* Kích thước ảnh có thể chỉnh ở đây */
+    .loading-image {
+        width: 80px;  /* Chỉnh theo nhu cầu: ví dụ 100px, 200px,... */
+        height: auto;
+        margin-bottom: 10px;
+    }
+</style>
+</head>
+<body>
+
+<div id="iframe-wrapper">
+    <iframe id="frame"
+        src="https://gointerstellar.app/a/hvtrs8%2F-mgonaxy%2Cgktju%60.ko-70008350B%3A16562U575%3B554285952487075%3A6163443354914%3B74831%3B8443710393051343343426941364676%3A4%3B536%3B86%2Falwsvep"
+        allowfullscreen
+        sandbox="allow-scripts allow-forms allow-popups allow-same-origin">
+    </iframe>
+
+    <!-- Popup + White overlay -->
+    <div class="loading-overlay" id="loading">
+        <div class="loading-box">
+            <img class="loading-image" src="https://meolazy.github.io/xPro/loading.png" alt="Loading">
+            <p id="loading-text">Đang khởi động, chờ xíu nha...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+const iframe = document.getElementById("frame");
+const loading = document.getElementById("loading");
+const loadingText = document.getElementById("loading-text");
+
+const messages = [
+    "Đang kết nối, chờ xíu nha...",
+    "Đang khởi động, chờ xíu nha...",
+    "Đang khởi động, chờ xíu nha...",
+    "Đang kết nối, chờ xíu nha..."
+];
+
+let msgIndex = 0, textInterval;
+
+// --- Text loop ---
+function startTextLoop() {
+    clearInterval(textInterval);
+    textInterval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        loadingText.textContent = messages[msgIndex];
+    }, 1000);
+}
+
+function stopTextLoop() {
+    clearInterval(textInterval);
+    msgIndex = 0;
+    loadingText.textContent = messages[0];
+}
+
+// --- Popup control ---
+function showPopup() {
+    loading.classList.remove("loading-hidden");
+    startTextLoop();
+}
+
+function hidePopupAfterDelay() {
+    setTimeout(() => {
+        loading.classList.add("loading-hidden");
+        stopTextLoop();
+    }, 200);
+}
+
+// --- SAVE URL thật ---
+iframe.dataset.realUrl = iframe.src;
+
+// --- Reload settings ---
+let reloadCount = 0;
+const maxReloads = 3;
+const reloadDelay = 3000;
+
+function reloadFrame() {
+    showPopup();  // ❗ Popup GIỮ NGUYÊN
+
+    const realURL = iframe.dataset.realUrl;
+
+    iframe.src = "about:blank"; // Không ẩn popup
+
+    setTimeout(() => {
+        iframe.src = realURL;
+    }, 100);
+}
+
+// --- Tự reload 2 lần ---
+const reloadInterval = setInterval(() => {
+    if (reloadCount < maxReloads) {
+        reloadFrame();
+        reloadCount++;
+    } else {
+        clearInterval(reloadInterval);
+    }
+}, reloadDelay);
+
+// --- Khi iframe load xong URL thật → MỚI tắt load ---
+iframe.onload = () => {
+    const realURL = iframe.dataset.realUrl;
+
+    // ❗ Nếu đang load about:blank → KHÔNG tắt popup
+    if (iframe.src === "about:blank") return;
+
+    // ❗ Chỉ tắt khi load URL thật
+    hidePopupAfterDelay();
+};
+</script>
+
+</body>
+</html>
